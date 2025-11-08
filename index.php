@@ -30,69 +30,9 @@ $certificates = fetch_all_results($conn->query("SELECT * FROM certificates ORDER
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-ar="طارق القديمي - مطور برمجيات" data-en="Tariq Alqudaimi - Software Developer">طارق القديمي - مطور برمجيات</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display.swap');
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display.swap');
-
-        :root { /* الوضع الفاتح */
-            --bg-primary: #F9FAFB; --bg-secondary: #FFFFFF; --bg-header: #111827;
-            --text-primary: #1F2937; --text-secondary-light: #6B7280; --text-header: #FFFFFF;
-            --accent: #10B981; --accent-light: #A7F3D0;
-            --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            --card-hover-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-            --header-image-border: #4B5563;
-        }
-        .dark-theme { /* الوضع المظلم */
-            --bg-primary: #0a0e1a; --bg-secondary: #191f2c;
-            --bg-header: linear-gradient(145deg, #2c1e6d, #5a2a8c);
-            --text-primary: #FFFFFF; --text-secondary-light: #a0aec0; --text-header: #FFFFFF;
-            --accent: #9f7aea; --accent-light: rgba(159, 122, 234, 0.15);
-            --card-shadow: none; --card-hover-shadow: 0 8px 25px -3px rgba(159, 122, 234, 0.2);
-            --header-image-border: #9f7aea;
-        }
-        html { scroll-behavior: smooth; }
-        body[lang='ar'] { font-family: 'Tajawal', sans-serif; }
-        body[lang='en'] { font-family: 'Inter', sans-serif; }
-        body { background-color: var(--bg-primary); color: var(--text-primary); transition: background-color 0.3s, color 0.3s; }
-        .header-section { background: var(--bg-header); color: var(--text-header); }
-        .text-accent { color: var(--accent); }
-        .text-muted { color: var(--text-secondary-light); }
-        .hidden-view { display: none !important; }
-
-        /* أنماط واجهة الموقع الكامل */
-        #website-view .card { background-color: var(--bg-secondary); color: var(--text-primary); border-radius: 0.75rem; box-shadow: var(--card-shadow); transition: transform 0.3s, box-shadow 0.3s; }
-        #website-view .card:hover { transform: translateY(-5px); box-shadow: var(--card-hover-shadow); }
-        #website-view .btn-primary { display: inline-flex; align-items: center; justify-content: center; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; background-color: var(--accent); color: white; transition: opacity 0.3s; }
-        #website-view .btn-primary:hover { opacity: 0.9; }
-        #header-image { border: 4px solid var(--header-image-border); transition: border-color 0.3s; }
-
-        /* أنماط واجهة السيرة الذاتية (تستخدم المتغيرات الآن) */
-        #resume-view-wrapper { background-color: var(--bg-primary); display: flex; justify-content: center; align-items: flex-start; padding: 3rem 1rem; min-height: 100vh; }
-        .resume-container { background-color: var(--bg-secondary); color: var(--text-primary); max-width: 950px; width: 100%; border-radius: 1rem; overflow: hidden; box-shadow: var(--card-hover-shadow); }
-        .resume-header { background: var(--bg-header); color: var(--text-header); padding: 2.5rem; text-align: center; }
-        .resume-header img { width: 130px; height: 130px; border-radius: 50%; border: 5px solid var(--accent); margin: 0 auto 1rem; object-fit: cover; }
-        .resume-header h1 { font-size: 2.25rem; font-weight: 800; }
-        .resume-header .job-title { display: inline-block; background-color: var(--accent); color: white; padding: 0.3rem 1.25rem; border-radius: 999px; font-size: 0.9rem; margin-top: 0.5rem; }
-        .resume-contact-info { display: flex; justify-content: center; flex-wrap: wrap; gap: 1.5rem; margin-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 1.5rem; font-size: 0.9rem; }
-        .resume-contact-info div { display: flex; align-items: center; gap: 0.5rem; }
-        .resume-body { display: grid; grid-template-columns: 1fr; gap: 2.5rem; padding: 2.5rem; }
-        @media (min-width: 768px) { .resume-body { grid-template-columns: 2fr 1fr; } html[lang="ar"] .resume-body { grid-template-columns: 1fr 2fr; } }
-        .resume-section h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--accent); }
-        .item-list-item { position: relative; padding-left: 1.75rem; margin-bottom: 1.5rem; }
-        html[lang="ar"] .item-list-item { padding-left: 0; padding-right: 1.75rem; }
-        .item-list-item::before { content: ''; position: absolute; left: 0.25rem; top: 0.5rem; width: 0.75rem; height: 0.75rem; border-radius: 50%; background-color: var(--accent); }
-        html[lang="ar"] .item-list-item::before { left: auto; right: 0.25rem; }
-        .skill-category h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--text-secondary-light); }
-        .skills-pills { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-        .skill-pill { background-color: var(--accent-light); color: var(--accent); padding: 0.25rem 0.75rem; border-radius: 0.5rem; font-size: 0.85rem; font-weight: 500; }
-
-        .ar-content, .en-content { display: none; }
-        html[lang="ar"] .ar-content { display: block; }
-        html[lang="en"] .en-content { display: block; }
-        html[lang="ar"] span.ar-content, html[lang="en"] span.en-content { display: inline; }
-    </style>
+     <script src="https://cdn.tailwindcss.com"></script> 
+    <link rel="stylesheet" href="assets/css/style.css">
+    
 </head>
 <body class="">
 
@@ -191,7 +131,7 @@ $certificates = fetch_all_results($conn->query("SELECT * FROM certificates ORDER
             </div>
         </div>
     </div>
-    
+    <script src="assets/js/lucide.min.js"></script>
     <script>
         document.getElementById('copyright-year-website').textContent = new Date().getFullYear();
         lucide.createIcons();
