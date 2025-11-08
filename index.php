@@ -32,7 +32,7 @@ $certificates = fetch_all_results($conn->query("SELECT * FROM certificates ORDER
     <title data-ar="طارق القديمي - مطور برمجيات" data-en="Tariq Alqudaimi - Software Developer">طارق القديمي - مطور برمجيات</title>
      <script src="https://cdn.tailwindcss.com"></script> 
     <link rel="stylesheet" href="assets/css/style.css">
-    
+    <link rel="shortcut icon" href="./assets/image/IMG_4891.PNG" type="image/x-icon">
 </head>
 <body class="">
 

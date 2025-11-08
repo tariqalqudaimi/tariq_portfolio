@@ -76,14 +76,34 @@
             --card-hover-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
             --header-image-border: #4B5563;
         }
-        .dark-theme { /* الوضع المظلم */
-            --bg-primary: #0a0e1a; --bg-secondary: #191f2c;
-            --bg-header: linear-gradient(145deg, #2c1e6d, #5a2a8c);
-            --text-primary: #FFFFFF; --text-secondary-light: #a0aec0; --text-header: #FFFFFF;
-            --accent: #9f7aea; --accent-light: rgba(159, 122, 234, 0.15);
-            --card-shadow: none; --card-hover-shadow: 0 8px 25px -3px rgba(159, 122, 234, 0.2);
-            --header-image-border: #9f7aea;
-        }
+        .dark-theme {
+    /* الخلفيات: درجات أزرق داكن لتوفير الراحة للعين */
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+
+    /* رأس الصفحة: لون داكن ثابت ليحاكي بساطة الوضع الفاتح */
+    --bg-header: #161b22;
+
+    /* النصوص: ألوان فاتحة لتباين واضح */
+    --text-primary: #e6edf3;
+    --text-secondary-light: #8b949e;
+    --text-header: #e6edf3;
+
+    /* اللون الأساسي: تم توحيده مع الوضع الفاتح */
+    --accent: #10B981;
+
+    /* نسخة مضيئة من اللون الأساسي للهوامش والتأثيرات الخفيفة */
+    --accent-light: rgba(16, 185, 129, 0.15);
+
+    /* الظلال: ظل خفيف جداً للحفاظ على التصميم المسطح */
+    --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+
+    /* ظل عند التحويم: تم تغييره إلى اللون الأخضر الجديد */
+    --card-hover-shadow: 0 8px 25px -3px rgba(16, 185, 129, 0.2);
+
+    /* لون إطار الصورة في رأس الصفحة: تم تغييره للون الأخضر */
+    --header-image-border: #10B981;
+}
         html { scroll-behavior: smooth; }
         body[lang='ar'] { font-family: 'Tajawal', sans-serif; }
         body[lang='en'] { font-family: 'Inter', sans-serif; }
