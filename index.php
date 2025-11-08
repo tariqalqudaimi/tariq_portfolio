@@ -1,10 +1,7 @@
 <?php
 require_once 'config/database.php';
 
-// --- الخطوة 1: جلب جميع البيانات من قاعدة البيانات وتخزينها في مصفوفات ---
-// هذا الأسلوب يحل مشكلة عدم ظهور البيانات ويجعل الكود أكثر تنظيمًا.
-
-// دالة مساعدة لجلب كل النتائج كمصفوفة
+// --- دالة مساعدة لجلب كل النتائج كمصفوفة ---
 function fetch_all_results($result) {
     $data = [];
     if ($result && $result->num_rows > 0) {
@@ -15,18 +12,16 @@ function fetch_all_results($result) {
     return $data;
 }
 
-// جلب المعلومات الشخصية
+// --- جلب جميع البيانات من قاعدة البيانات ---
 $info_result = $conn->query("SELECT * FROM personal_info LIMIT 1");
 $info = $info_result ? $info_result->fetch_assoc() : [];
-
-// جلب بيانات بقية الجداول وتخزينها في مصفوفات
 $services = fetch_all_results($conn->query("SELECT * FROM services ORDER BY id ASC"));
 $skills = fetch_all_results($conn->query("SELECT * FROM skills ORDER BY id ASC"));
 $soft_skills = fetch_all_results($conn->query("SELECT * FROM soft_skills ORDER BY id ASC"));
 $experiences = fetch_all_results($conn->query("SELECT * FROM experience ORDER BY id DESC"));
 $projects = fetch_all_results($conn->query("SELECT * FROM projects ORDER BY id DESC"));
-$education_result = $conn->query("SELECT * FROM education ORDER BY id DESC ");
-$education = $education_result ? $education_result->fetch_assoc() : null;
+// -- تعديل هنا: جلب كل الشهادات التعليمية --
+$educations = fetch_all_results($conn->query("SELECT * FROM education ORDER BY id DESC"));
 $certificates = fetch_all_results($conn->query("SELECT * FROM certificates ORDER BY id DESC"));
 ?>
 <!DOCTYPE html>
@@ -38,261 +33,202 @@ $certificates = fetch_all_results($conn->query("SELECT * FROM certificates ORDER
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-        :root { --dark-bg: #111827; --light-bg: #F9FAFB; --accent: #10B981; --accent-light: #A7F3D0; --text-dark: #1F2937; --text-light: #D1D5DB; }
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display.swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display.swap');
+
+        :root { /* الوضع الفاتح */
+            --bg-primary: #F9FAFB; --bg-secondary: #FFFFFF; --bg-header: #111827;
+            --text-primary: #1F2937; --text-secondary-light: #6B7280; --text-header: #FFFFFF;
+            --accent: #10B981; --accent-light: #A7F3D0;
+            --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --card-hover-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --header-image-border: #4B5563;
+        }
+        .dark-theme { /* الوضع المظلم */
+            --bg-primary: #0a0e1a; --bg-secondary: #191f2c;
+            --bg-header: linear-gradient(145deg, #2c1e6d, #5a2a8c);
+            --text-primary: #FFFFFF; --text-secondary-light: #a0aec0; --text-header: #FFFFFF;
+            --accent: #9f7aea; --accent-light: rgba(159, 122, 234, 0.15);
+            --card-shadow: none; --card-hover-shadow: 0 8px 25px -3px rgba(159, 122, 234, 0.2);
+            --header-image-border: #9f7aea;
+        }
         html { scroll-behavior: smooth; }
         body[lang='ar'] { font-family: 'Tajawal', sans-serif; }
         body[lang='en'] { font-family: 'Inter', sans-serif; }
-        body { background-color: var(--light-bg); color: var(--text-dark); }
-        .dark-section { background-color: var(--dark-bg); color: white; }
+        body { background-color: var(--bg-primary); color: var(--text-primary); transition: background-color 0.3s, color 0.3s; }
+        .header-section { background: var(--bg-header); color: var(--text-header); }
         .text-accent { color: var(--accent); }
-        .card { background-color: white; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); transition: transform 0.3s, box-shadow 0.3s; }
-        .card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); }
-        .btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; transition: background-color 0.3s; }
-        .btn-primary { background-color: var(--accent); color: white; }
-        .btn-primary:hover { background-color: #059669; }
+        .text-muted { color: var(--text-secondary-light); }
+        .hidden-view { display: none !important; }
+
+        /* أنماط واجهة الموقع الكامل */
+        #website-view .card { background-color: var(--bg-secondary); color: var(--text-primary); border-radius: 0.75rem; box-shadow: var(--card-shadow); transition: transform 0.3s, box-shadow 0.3s; }
+        #website-view .card:hover { transform: translateY(-5px); box-shadow: var(--card-hover-shadow); }
+        #website-view .btn-primary { display: inline-flex; align-items: center; justify-content: center; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; background-color: var(--accent); color: white; transition: opacity 0.3s; }
+        #website-view .btn-primary:hover { opacity: 0.9; }
+        #header-image { border: 4px solid var(--header-image-border); transition: border-color 0.3s; }
+
+        /* أنماط واجهة السيرة الذاتية (تستخدم المتغيرات الآن) */
+        #resume-view-wrapper { background-color: var(--bg-primary); display: flex; justify-content: center; align-items: flex-start; padding: 3rem 1rem; min-height: 100vh; }
+        .resume-container { background-color: var(--bg-secondary); color: var(--text-primary); max-width: 950px; width: 100%; border-radius: 1rem; overflow: hidden; box-shadow: var(--card-hover-shadow); }
+        .resume-header { background: var(--bg-header); color: var(--text-header); padding: 2.5rem; text-align: center; }
+        .resume-header img { width: 130px; height: 130px; border-radius: 50%; border: 5px solid var(--accent); margin: 0 auto 1rem; object-fit: cover; }
+        .resume-header h1 { font-size: 2.25rem; font-weight: 800; }
+        .resume-header .job-title { display: inline-block; background-color: var(--accent); color: white; padding: 0.3rem 1.25rem; border-radius: 999px; font-size: 0.9rem; margin-top: 0.5rem; }
+        .resume-contact-info { display: flex; justify-content: center; flex-wrap: wrap; gap: 1.5rem; margin-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 1.5rem; font-size: 0.9rem; }
+        .resume-contact-info div { display: flex; align-items: center; gap: 0.5rem; }
+        .resume-body { display: grid; grid-template-columns: 1fr; gap: 2.5rem; padding: 2.5rem; }
+        @media (min-width: 768px) { .resume-body { grid-template-columns: 2fr 1fr; } html[lang="ar"] .resume-body { grid-template-columns: 1fr 2fr; } }
+        .resume-section h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--accent); }
+        .item-list-item { position: relative; padding-left: 1.75rem; margin-bottom: 1.5rem; }
+        html[lang="ar"] .item-list-item { padding-left: 0; padding-right: 1.75rem; }
+        .item-list-item::before { content: ''; position: absolute; left: 0.25rem; top: 0.5rem; width: 0.75rem; height: 0.75rem; border-radius: 50%; background-color: var(--accent); }
+        html[lang="ar"] .item-list-item::before { left: auto; right: 0.25rem; }
+        .skill-category h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--text-secondary-light); }
+        .skills-pills { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .skill-pill { background-color: var(--accent-light); color: var(--accent); padding: 0.25rem 0.75rem; border-radius: 0.5rem; font-size: 0.85rem; font-weight: 500; }
+
         .ar-content, .en-content { display: none; }
         html[lang="ar"] .ar-content { display: block; }
         html[lang="en"] .en-content { display: block; }
         html[lang="ar"] span.ar-content, html[lang="en"] span.en-content { display: inline; }
     </style>
 </head>
-<body lang="ar">
+<body class="">
 
-    <!-- =========== HEADER =========== -->
-    <header class="dark-section sticky top-0 z-50 shadow-lg">
+    <!-- =========== HEADER (Global) =========== -->
+    <header class="header-section sticky top-0 z-50 shadow-lg">
         <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
             <div class="text-2xl font-bold"><a href="#home">T<span class="text-accent">A</span>RIQ</a></div>
             <div class="hidden md:flex items-center space-x-6" id="nav-links">
                 <a href="#services" class="hover:text-accent transition-colors" data-ar="الخدمات" data-en="Services"></a>
                 <a href="#skills" class="hover:text-accent transition-colors" data-ar="المهارات" data-en="Skills"></a>
                 <a href="#experience" class="hover:text-accent transition-colors" data-ar="الخبرة" data-en="Experience"></a>
-                <a href="#projects" class="hover:text-accent transition-colors" data-ar="المشاريع" data-en="Case Studies"></a>
+                <a href="#projects" class="hover:text-accent transition-colors" data-ar="المشاريع" data-en="Projects"></a>
                 <a href="#education" class="hover:text-accent transition-colors" data-ar="التعليم" data-en="Education"></a>
                 <a href="#certificates" class="hover:text-accent transition-colors" data-ar="الشهادات" data-en="Certificates"></a>
             </div>
-            <button id="lang-toggle" class="btn btn-primary">English</button>
+            <div class="flex items-center gap-2 md:gap-4">
+                <button id="layout-toggle" class="p-2 rounded-md hover:bg-white/10 transition-colors" title="Switch View"><i data-lucide="layout-grid" class="w-5 h-5"></i></button>
+                <button id="theme-toggle" class="p-2 rounded-md hover:bg-white/10 transition-colors" title="Switch Theme"><i data-lucide="sun" class="w-5 h-5"></i></button>
+                <button id="lang-toggle" class="btn-primary text-sm px-4 py-2 rounded-md">English</button>
+            </div>
         </nav>
     </header>
 
-    <main>
-        <!-- =========== HERO SECTION =========== -->
-        <section id="home" class="dark-section pt-16 pb-24">
-            <div class="container mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
-                <div id="hero-content" class="text-center md:text-right">
-                    <h1 class="text-4xl lg:text-5xl font-extrabold leading-tight mb-4">
-                        <span class="ar-content">مطور برمجيات يبني <span class="text-accent">تجارب رقمية</span> حديثة</span>
-                        <span class="en-content">Software Developer Building Modern <span class="text-accent">Digital Experiences</span></span>
-                    </h1>
-                    <p class="text-lg text-text-light mb-8">
-                        <span class="ar-content"><?= htmlspecialchars($info['job_title_ar'] ?? '') ?></span>
-                        <span class="en-content"><?= htmlspecialchars($info['job_title_en'] ?? '') ?></span>
-                    </p>
-                    <a href="#experience" class="btn btn-primary">
-                        <span class="ar-content">شاهد أعمالي</span><span class="en-content">View My Work</span>
-                    </a>
-                </div>
-                <div class="flex justify-center items-center"><div class="relative">
-                    <img src="https://placehold.co/400x400/1F2937/FFFFFF?text=Tariq" class="rounded-full w-64 h-64 lg:w-80 lg:h-80 object-cover z-10 relative border-4 border-gray-700">
-                    <div id="hero-accent-box" class="absolute -top-4 w-24 h-24 bg-accent rounded-lg -z-10"></div>
-                </div></div>
-            </div>
-        </section>
-        
-        <!-- =========== SERVICES SECTION =========== -->
-        <section id="services" class="py-20">
-            <div class="container mx-auto px-6 text-center">
-                <h2 class="text-3xl font-bold mb-12"><span class="ar-content">ماذا <span class="text-accent">أقدم</span></span><span class="en-content">What I <span class="text-accent">Offer</span></span></h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <?php foreach($services as $service): ?>
-                    <div class="card p-6 text-center">
-                        <div class="bg-accent-light text-accent rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center"><i data-lucide="<?= htmlspecialchars($service['icon_name']) ?>" class="w-8 h-8"></i></div>
-                        <h3 class="text-xl font-bold mb-2">
-                            <span class="ar-content"><?= htmlspecialchars($service['title_ar']) ?></span>
-                            <span class="en-content"><?= htmlspecialchars($service['title_en']) ?></span>
-                        </h3>
-                        <p class="text-gray-500">
-                            <span class="ar-content"><?= htmlspecialchars($service['description_ar']) ?></span>
-                            <span class="en-content"><?= htmlspecialchars($service['description_en']) ?></span>
-                        </p>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-        </section>
-
-        <!-- =========== SKILLS SECTION =========== -->
-        <section id="skills" class="py-20 bg-white">
-            <div class="container mx-auto px-6">
-                <h2 class="text-3xl font-bold mb-12 text-center"><span class="ar-content">المهارات <span class="text-accent">التقنية والشخصية</span></span><span class="en-content">Technical & Soft <span class="text-accent">Skills</span></span></h2>
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div class="lg:col-span-2">
-                        <h3 class="text-2xl font-bold mb-6 text-center lg:text-right ar-content">المهارات التقنية</h3>
-                        <h3 class="text-2xl font-bold mb-6 text-center lg:text-left en-content">Technical Skills</h3>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            <?php foreach($skills as $skill): ?>
-                            <div class="card p-4">
-                                <div class="flex items-center gap-4">
-                                    <div class="bg-accent-light text-accent rounded-lg p-2"><i data-lucide="<?= htmlspecialchars($skill['icon']) ?>" class="w-6 h-6"></i></div>
-                                    <div>
-                                        <h4 class="font-bold"><span class="ar-content"><?= htmlspecialchars($skill['category_ar']) ?></span><span class="en-content"><?= htmlspecialchars($skill['category_en']) ?></span></h4>
-                                        <p class="text-sm text-gray-500"><?= htmlspecialchars($skill['skills_list']) ?></p>
-                                    </div>
+    <!-- =========== الواجهة الأولى: تصميم الموقع (Portfolio View) =========== -->
+    <div id="website-view">
+        <main>
+            <section id="home" class="header-section pt-16 pb-24"><div class="container mx-auto px-6 grid md:grid-cols-2 gap-12 items-center"><div id="hero-content" class="text-center md:text-right"><h1 class="text-4xl lg:text-5xl font-extrabold leading-tight mb-4"><span class="ar-content">مطور برمجيات يبني <span class="text-accent">تجارب رقمية</span> حديثة</span><span class="en-content">Software Developer Building Modern <span class="text-accent">Digital Experiences</span></span></h1><p class="text-lg text-muted mb-8"><span class="ar-content"><?= htmlspecialchars($info['job_title_ar'] ?? '') ?></span><span class="en-content"><?= htmlspecialchars($info['job_title_en'] ?? '') ?></span></p><a href="#projects" class="btn-primary"><span class="ar-content">شاهد أعمالي</span><span class="en-content">View My Work</span></a></div><div class="flex justify-center items-center"><img id="header-image" src="<?= htmlspecialchars($info['image_url'] ?? 'https://placehold.co/400x400/?text=Image') ?>" class="rounded-full w-64 h-64 lg:w-80 lg:h-80 object-cover z-10 relative"></div></div></section>
+            <section id="services" class="py-20"><div class="container mx-auto px-6 text-center"><h2 class="text-3xl font-bold mb-12"><span class="ar-content">ماذا <span class="text-accent">أقدم</span></span><span class="en-content">What I <span class="text-accent">Offer</span></span></h2><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"><?php foreach($services as $service): ?><div class="card p-6 text-center"><div class="bg-accent-light text-accent rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center"><i data-lucide="<?= htmlspecialchars($service['icon_name']) ?>" class="w-8 h-8"></i></div><h3 class="text-xl font-bold mb-2"><span class="ar-content"><?= htmlspecialchars($service['title_ar']) ?></span><span class="en-content"><?= htmlspecialchars($service['title_en']) ?></span></h3><p class="text-muted"><span class="ar-content"><?= htmlspecialchars($service['description_ar']) ?></span><span class="en-content"><?= htmlspecialchars($service['description_en']) ?></span></p></div><?php endforeach; ?></div></div></section>
+            <section id="skills" class="py-20"><div class="container mx-auto px-6"><h2 class="text-3xl font-bold mb-12 text-center"><span class="ar-content">المهارات <span class="text-accent">التقنية والشخصية</span></span><span class="en-content">Technical & Soft <span class="text-accent">Skills</span></span></h2><div class="grid grid-cols-1 lg:grid-cols-3 gap-8"><div class="lg:col-span-2"><h3 class="text-2xl font-bold mb-6 text-center lg:text-right ar-content">المهارات التقنية</h3><h3 class="text-2xl font-bold mb-6 text-center lg:text-left en-content">Technical Skills</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-6"><?php foreach($skills as $skill): ?><div class="card p-4"><div class="flex items-center gap-4"><div class="bg-accent-light text-accent rounded-lg p-2"><i data-lucide="<?= htmlspecialchars($skill['icon']) ?>" class="w-6 h-6"></i></div><div><h4 class="font-bold"><span class="ar-content"><?= htmlspecialchars($skill['category_ar']) ?></span><span class="en-content"><?= htmlspecialchars($skill['category_en']) ?></span></h4><p class="text-sm text-muted"><?= htmlspecialchars($skill['skills_list']) ?></p></div></div></div><?php endforeach; ?></div></div><div><h3 class="text-2xl font-bold mb-6 text-center lg:text-right ar-content">المهارات الشخصية</h3><h3 class="text-2xl font-bold mb-6 text-center lg:text-left en-content">Soft Skills</h3><div class="card p-6"><ul class="space-y-4"><?php foreach($soft_skills as $soft_skill): ?><li class="flex items-center gap-3"><i data-lucide="<?= htmlspecialchars($soft_skill['icon_name']) ?>" class="w-5 h-5 text-accent"></i><span><span class="ar-content"><?= htmlspecialchars($soft_skill['skill_ar']) ?></span><span class="en-content"><?= htmlspecialchars($soft_skill['skill_en']) ?></span></span></li><?php endforeach; ?></ul></div></div></div></div></section>
+            <section id="experience" class="py-20"><div class="container mx-auto px-6"><h2 class="text-3xl font-bold mb-12 text-center"><span class="ar-content">الخبرة <span class="text-accent">العملية</span></span><span class="en-content">Professional <span class="text-accent">Experience</span></span></h2><div class="space-y-8"><?php foreach($experiences as $exp): ?><div class="card p-6 grid md:grid-cols-3 gap-6"><div class="md:col-span-1"><h3 class="text-xl font-bold text-accent"><span class="ar-content"><?= htmlspecialchars($exp['title_ar']) ?></span><span class="en-content"><?= htmlspecialchars($exp['title_en']) ?></span></h3><p class="font-semibold"><span class="ar-content"><?= htmlspecialchars($exp['company_ar']) ?></span><span class="en-content"><?= htmlspecialchars($exp['company_en']) ?></span></p><p class="text-sm text-muted"><span class="ar-content"><?= htmlspecialchars($exp['period_ar']) ?></span><span class="en-content"><?= htmlspecialchars($exp['period_en']) ?></span></p></div><div class="md:col-span-2 text-muted"><ul class="list-disc pr-5 space-y-1 ar-content"><?php foreach(explode("\n", trim($exp['description_ar'])) as $point): if(!empty($point)): ?><li><?= htmlspecialchars(trim($point)) ?></li><?php endif; endforeach; ?></ul><ul class="list-disc pl-5 space-y-1 en-content"><?php foreach(explode("\n", trim($exp['description_en'])) as $point): if(!empty($point)): ?><li><?= htmlspecialchars(trim($point)) ?></li><?php endif; endforeach; ?></ul></div></div><?php endforeach; ?></div></div></section>
+            <section id="projects" class="py-20"><div class="container mx-auto px-6"><h2 class="text-3xl font-bold mb-12 text-center"><span class="ar-content">مشاريع <span class="text-accent">مميزة</span></span><span class="en-content">Featured <span class="text-accent">Projects</span></span></h2><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"><?php foreach($projects as $proj): ?><div class="card flex flex-col p-0 overflow-hidden"><img src="<?= htmlspecialchars($proj['main_image_url'] ?? 'https://placehold.co/600x400/?text=Project') ?>" alt="Project Image" class="w-full h-48 object-cover"><div class="p-6 flex flex-col flex-grow"><h3 class="text-xl font-bold mb-2"><span class="ar-content"><?= htmlspecialchars($proj['title_ar']) ?></span><span class="en-content"><?= htmlspecialchars($proj['title_en']) ?></span></h3><p class="text-muted text-sm mb-4 flex-grow"><span class="ar-content"><?= htmlspecialchars($proj['description_ar']) ?></span><span class="en-content"><?= htmlspecialchars($proj['description_en']) ?></span></p><a href="#" class="btn-primary mt-auto self-start"><span class="ar-content">عرض المشروع</span><span class="en-content">View Project</span></a></div></div><?php endforeach; ?></div></div></section>
+            
+            <!-- ====== قسم التعليم (معدّل) ====== -->
+            <section id="education" class="py-20">
+                <div class="container mx-auto px-6">
+                    <h2 class="text-3xl font-bold mb-12 text-center"><span class="ar-content">المسار <span class="text-accent">التعليمي</span></span><span class="en-content">Educational <span class="text-accent">Path</span></span></h2>
+                    <div class="max-w-2xl mx-auto space-y-8">
+                        <?php foreach($educations as $edu): ?>
+                        <div class="card p-6">
+                            <div class="flex items-center gap-4">
+                                <i data-lucide="graduation-cap" class="w-12 h-12 text-accent flex-shrink-0"></i>
+                                <div>
+                                    <p class="font-bold text-lg"><span class="ar-content"><?= htmlspecialchars($edu['degree_ar']) ?></span><span class="en-content"><?= htmlspecialchars($edu['degree_en']) ?></span></p>
+                                    <p class="text-muted"><span class="ar-content"><?= htmlspecialchars($edu['university_ar']) ?></span><span class="en-content"><?= htmlspecialchars($edu['university_en']) ?></span></p>
+                                    <p class="text-sm text-muted"><span class="ar-content"><?= htmlspecialchars($edu['graduation_year_ar']) ?></span><span class="en-content"><?= htmlspecialchars($edu['graduation_year_en']) ?></span></p>
                                 </div>
                             </div>
-                            <?php endforeach; ?>
                         </div>
-                    </div>
-                    <div>
-                        <h3 class="text-2xl font-bold mb-6 text-center lg:text-right ar-content">المهارات الشخصية</h3>
-                        <h3 class="text-2xl font-bold mb-6 text-center lg:text-left en-content">Soft Skills</h3>
-                        <div class="card p-6">
-                            <ul class="space-y-4">
-                                <?php foreach($soft_skills as $soft_skill): ?>
-                                <li class="flex items-center gap-3">
-                                    <i data-lucide="<?= htmlspecialchars($soft_skill['icon_name']) ?>" class="w-5 h-5 text-accent"></i>
-                                    <span>
-                                        <span class="ar-content"><?= htmlspecialchars($soft_skill['skill_ar']) ?></span>
-                                        <span class="en-content"><?= htmlspecialchars($soft_skill['skill_en']) ?></span>
-                                    </span>
-                                </li>
-                                <?php endforeach; ?>
-                            </ul>
-                        </div>
+                        <?php endforeach; ?>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- =========== EXPERIENCE SECTION =========== -->
-        <section id="experience" class="py-20">
-            <div class="container mx-auto px-6">
-                <h2 class="text-3xl font-bold mb-12 text-center"><span class="ar-content">الخبرة <span class="text-accent">العملية</span></span><span class="en-content">Professional <span class="text-accent">Experience</span></span></h2>
-                <div class="space-y-8">
-                    <?php foreach($experiences as $exp): ?>
-                    <div class="card p-6 grid md:grid-cols-3 gap-6">
-                        <div class="md:col-span-1">
-                            <h3 class="text-xl font-bold text-accent"><span class="ar-content"><?= htmlspecialchars($exp['title_ar']) ?></span><span class="en-content"><?= htmlspecialchars($exp['title_en']) ?></span></h3>
-                            <p class="font-semibold"><span class="ar-content"><?= htmlspecialchars($exp['company_ar']) ?></span><span class="en-content"><?= htmlspecialchars($exp['company_en']) ?></span></p>
-                            <p class="text-sm text-gray-500"><span class="ar-content"><?= htmlspecialchars($exp['period_ar']) ?></span><span class="en-content"><?= htmlspecialchars($exp['period_en']) ?></span></p>
-                        </div>
-                        <div class="md:col-span-2">
-                            <ul class="list-disc pr-5 space-y-1 text-gray-600 ar-content">
-                                <?php foreach(explode("\n", trim($exp['description_ar'])) as $point): if(!empty($point)): ?><li><?= htmlspecialchars(trim($point)) ?></li><?php endif; endforeach; ?>
-                            </ul>
-                            <ul class="list-disc pl-5 space-y-1 text-gray-600 en-content">
-                                <?php foreach(explode("\n", trim($exp['description_en'])) as $point): if(!empty($point)): ?><li><?= htmlspecialchars(trim($point)) ?></li><?php endif; endforeach; ?>
-                            </ul>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
+            <section id="certificates" class="py-20"><div class="container mx-auto px-6"><h2 class="text-3xl font-bold mb-12 text-center"><span class="ar-content">الشهادات <span class="text-accent">الاحترافية</span></span><span class="en-content">Professional <span class="text-accent">Certificates</span></span></h2><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"><?php foreach($certificates as $cert): ?><div class="card p-6"><div class="flex items-start gap-4"><i data-lucide="award" class="w-8 h-8 text-accent flex-shrink-0 mt-1"></i><div><p class="font-semibold"><span class="ar-content"><?= htmlspecialchars($cert['name_ar']) ?></span><span class="en-content"><?= htmlspecialchars($cert['name_en']) ?></span></p><p class="text-sm text-muted"><span class="ar-content"><?= htmlspecialchars($cert['issuer_ar']) ?></span><span class="en-content"><?= htmlspecialchars($cert['issuer_en']) ?></span></p></div></div></div><?php endforeach; ?></div></div></section>
+        </main>
+        <footer class="header-section pt-12"><div class="container mx-auto px-6 text-center"><h2 class="text-3xl font-bold mb-2"><span class="ar-content">لنتحدث عن مشروعك القادم</span><span class="en-content">Let's Talk About Your Next Project</span></h2><p class="text-muted mb-6"><span class="ar-content">أنا متحمس دائمًا لاستكشاف أفكار جديدة.</span><span class="en-content">Always excited to explore new ideas.</span></p><a href="mailto:<?= htmlspecialchars($info['email'] ?? '') ?>" class="btn-primary mb-12"><i data-lucide="mail" class="w-5 h-5"></i><span class="mx-2"><?= htmlspecialchars($info['email'] ?? '') ?></span></a><div class="border-t border-gray-700 py-4 text-sm text-gray-400"><p>&copy; <span id="copyright-year-website"></span> <?= htmlspecialchars($info['full_name_en'] ?? '') ?>. All rights reserved.</p></div></div></footer>
+    </div>
+    
+    <!-- =========== الواجهة الثانية: تصميم السيرة الذاتية (Resume View) =========== -->
+    <div id="resume-view-wrapper" class="hidden-view">
+        <div class="resume-container">
+            <header class="resume-header">
+                <img src="<?= htmlspecialchars($info['image_url'] ?? 'https://placehold.co/400x400/?text=Image') ?>" alt="Profile Picture">
+                <h1><span class="ar-content"><?= htmlspecialchars($info['full_name_ar'] ?? '') ?></span><span class="en-content"><?= htmlspecialchars($info['full_name_en'] ?? '') ?></span></h1>
+                <div class="job-title"><span class="ar-content"><?= htmlspecialchars($info['job_title_ar'] ?? '') ?></span><span class="en-content"><?= htmlspecialchars($info['job_title_en'] ?? '') ?></span></div>
+                <div class="resume-contact-info">
+                    <div><i data-lucide="mail" class="w-4 h-4"></i><span><?= htmlspecialchars($info['email'] ?? '') ?></span></div>
+                    <div><i data-lucide="map-pin" class="w-4 h-4"></i><span><span class="ar-content"><?= htmlspecialchars($info['location_ar'] ?? '') ?></span><span class="en-content"><?= htmlspecialchars($info['location_en'] ?? '') ?></span></span></div>
+                    <div><i data-lucide="phone" class="w-4 h-4"></i><span><?= htmlspecialchars($info['phone'] ?? '') ?></span></div>
                 </div>
-            </div>
-        </section>
-
-        <!-- =========== PROJECTS / CASE STUDIES SECTION =========== -->
-        <section id="projects" class="py-20 bg-white">
-            <div class="container mx-auto px-6">
-                <h2 class="text-3xl font-bold mb-12 text-center"><span class="ar-content">دراسات حالة <span class="text-accent">لمشاريعي</span></span><span class="en-content">Project <span class="text-accent">Case Studies</span></span></h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <?php foreach($projects as $proj): ?>
-                    <div class="card flex flex-col p-0 overflow-hidden">
-                        <img src="<?= htmlspecialchars($proj['main_image_url'] ?? 'https://placehold.co/600x400/111827/FFFFFF?text=Project') ?>" alt="Project Image" class="w-full h-48 object-cover">
-                        <div class="p-6 flex flex-col flex-grow">
-                            <h3 class="text-xl font-bold mb-2"><span class="ar-content"><?= htmlspecialchars($proj['title_ar']) ?></span><span class="en-content"><?= htmlspecialchars($proj['title_en']) ?></span></h3>
-                            <p class="text-gray-600 text-sm mb-4 flex-grow"><span class="ar-content"><?= htmlspecialchars($proj['description_ar']) ?></span><span class="en-content"><?= htmlspecialchars($proj['description_en']) ?></span></p>
-                            <button class="btn btn-primary mt-auto self-start"><span class="ar-content">عرض دراسة الحالة</span><span class="en-content">View Case Study</span></button>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
+            </header>
+            <div class="resume-body">
+                <div class="resume-main-content">
+                    <section class="resume-section"><h2 class="ar-content">عني</h2><h2 class="en-content">About me</h2><p class="leading-relaxed text-muted"><span class="ar-content"><?= htmlspecialchars($info['about_me_ar'] ?? '') ?></span><span class="en-content"><?= htmlspecialchars($info['about_me_en'] ?? '') ?></span></p></section>
+                    <section class="resume-section mt-8"><h2 class="ar-content">الخبرة</h2><h2 class="en-content">Experience</h2><?php foreach($experiences as $exp): ?><div class="item-list-item"><h3 class="font-bold text-lg"><span class="ar-content"><?= htmlspecialchars($exp['title_ar']) ?></span><span class="en-content"><?= htmlspecialchars($exp['title_en']) ?></span></h3><p class="font-semibold text-muted"><span class="ar-content"><?= htmlspecialchars($exp['company_ar']) ?></span><span class="en-content"><?= htmlspecialchars($exp['company_en']) ?></span></p></div><?php endforeach; ?></section>
+                    <section class="resume-section mt-8"><h2 class="ar-content">المشاريع</h2><h2 class="en-content">Projects</h2><?php foreach($projects as $proj): ?><div class="item-list-item"><h3 class="font-bold text-lg"><span class="ar-content"><?= htmlspecialchars($proj['title_ar']) ?></span><span class="en-content"><?= htmlspecialchars($proj['title_en']) ?></span></h3><p class="text-sm text-muted"><span class="ar-content"><?= htmlspecialchars($proj['description_ar']) ?></span><span class="en-content"><?= htmlspecialchars($proj['description_en']) ?></span></p></div><?php endforeach; ?></section>
                 </div>
-            </div>
-        </section>
-        
-        <!-- =========== EDUCATION SECTION =========== -->
-        <section id="education" class="py-20">
-            <div class="container mx-auto px-6">
-                <h2 class="text-3xl font-bold mb-12 text-center"><span class="ar-content">المسار <span class="text-accent">التعليمي</span></span><span class="en-content">Educational <span class="text-accent">Path</span></span></h2>
-                <?php if($education): ?>
-                <div class="card max-w-2xl mx-auto p-6">
-                    <div class="flex items-center gap-4">
-                        <i data-lucide="graduation-cap" class="w-12 h-12 text-accent flex-shrink-0"></i>
-                        <div>
-                            <p class="font-bold text-lg"><span class="ar-content"><?= htmlspecialchars($education['degree_ar']) ?></span><span class="en-content"><?= htmlspecialchars($education['degree_en']) ?></span></p>
-                            <p class="text-gray-700"><span class="ar-content"><?= htmlspecialchars($education['university_ar']) ?></span><span class="en-content"><?= htmlspecialchars($education['university_en']) ?></span></p>
-                            <p class="text-sm text-gray-500"><span class="ar-content"><?= htmlspecialchars($education['graduation_year_ar']) ?></span><span class="en-content"><?= htmlspecialchars($education['graduation_year_en']) ?></span></p>
+                <div class="resume-sidebar">
+                     <!-- ====== قسم التعليم (معدّل) ====== -->
+                     <section class="resume-section"><h2 class="ar-content">التعليم</h2><h2 class="en-content">Education</h2>
+                        <?php foreach($educations as $edu): ?>
+                        <div class="item-list-item">
+                            <h3 class="font-bold text-lg"><span class="ar-content"><?= htmlspecialchars($edu['degree_ar']) ?></span><span class="en-content"><?= htmlspecialchars($edu['degree_en']) ?></span></h3>
+                            <p class="font-semibold text-muted">
+                                <span class="ar-content"><?= htmlspecialchars($edu['university_ar']) ?></span><span class="en-content"><?= htmlspecialchars($edu['university_en']) ?></span>, 
+                                <span class="ar-content"><?= htmlspecialchars($edu['graduation_year_ar']) ?></span><span class="en-content"><?= htmlspecialchars($edu['graduation_year_en']) ?></span>
+                            </p>
                         </div>
-                    </div>
+                        <?php endforeach; ?>
+                    </section>
+                    <section class="resume-section mt-8"><h2 class="ar-content">المهارات التقنية</h2><h2 class="en-content">Technical Skills</h2><?php foreach($skills as $skill): ?><div class="skill-category mb-4"><h3><span class="ar-content"><?= htmlspecialchars($skill['category_ar']) ?></span><span class="en-content"><?= htmlspecialchars($skill['category_en']) ?></span></h3><div class="skills-pills"><?php foreach(explode(',', $skill['skills_list']) as $item): ?><span class="skill-pill"><?= htmlspecialchars(trim($item)) ?></span><?php endforeach; ?></div></div><?php endforeach; ?></section>
+                    <section class="resume-section mt-8"><h2 class="ar-content">المهارات الشخصية</h2><h2 class="en-content">Soft Skills</h2><div class="skills-pills"><?php foreach($soft_skills as $s_skill): ?><span class="skill-pill"><span class="ar-content"><?= htmlspecialchars($s_skill['skill_ar']) ?></span><span class="en-content"><?= htmlspecialchars($s_skill['skill_en']) ?></span></span><?php endforeach; ?></div></section>
+                    <section class="resume-section mt-8"><h2 class="ar-content">الشهادات</h2><h2 class="en-content">Certificates</h2><?php foreach($certificates as $cert): ?><div class="item-list-item"><h3 class="font-bold text-lg"><span class="ar-content"><?= htmlspecialchars($cert['name_ar']) ?></span><span class="en-content"><?= htmlspecialchars($cert['name_en']) ?></span></h3><p class="text-sm text-muted"><span class="ar-content"><?= htmlspecialchars($cert['issuer_ar']) ?></span><span class="en-content"><?= htmlspecialchars($cert['issuer_en']) ?></span></p></div><?php endforeach; ?></section>
                 </div>
-                <?php endif; ?>
-            </div>
-        </section>
-
-        <!-- =========== CERTIFICATES SECTION =========== -->
-        <section id="certificates" class="py-20 bg-white">
-            <div class="container mx-auto px-6">
-                <h2 class="text-3xl font-bold mb-12 text-center"><span class="ar-content">الشهادات <span class="text-accent">الاحترافية</span></span><span class="en-content">Professional <span class="text-accent">Certificates</span></span></h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <?php foreach($certificates as $cert): ?>
-                    <div class="card p-6">
-                        <div class="flex items-start gap-4">
-                            <i data-lucide="award" class="w-8 h-8 text-accent flex-shrink-0 mt-1"></i>
-                            <div>
-                                <p class="font-semibold"><span class="ar-content"><?= htmlspecialchars($cert['name_ar']) ?></span><span class="en-content"><?= htmlspecialchars($cert['name_en']) ?></span></p>
-                                <p class="text-sm text-gray-500"><span class="ar-content"><?= htmlspecialchars($cert['issuer_ar']) ?></span><span class="en-content"><?= htmlspecialchars($cert['issuer_en']) ?></span></p>
-                            </div>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- =========== FOOTER =========== -->
-    <footer class="dark-section pt-12">
-        <div class="container mx-auto px-6 text-center">
-            <h2 class="text-3xl font-bold mb-2"><span class="ar-content">لنتحدث عن مشروعك القادم</span><span class="en-content">Let's Talk About Your Next Project</span></h2>
-            <p class="text-text-light mb-6"><span class="ar-content">أنا متحمس دائمًا لاستكشاف أفكار جديدة.</span><span class="en-content">Always excited to explore new ideas.</span></p>
-            <a href="mailto:<?= htmlspecialchars($info['email'] ?? '') ?>" class="btn btn-primary mb-12">
-                <i data-lucide="mail" class="w-5 h-5"></i><span class="mx-2"><?= htmlspecialchars($info['email'] ?? '') ?></span>
-            </a>
-            <div class="border-t border-gray-700 py-4 text-sm text-gray-400">
-                 <p>&copy; <span id="copyright-year"></span> Tariq Alqudaimi. All rights reserved.</p>
             </div>
         </div>
-    </footer>
+    </div>
     
     <script>
+        document.getElementById('copyright-year-website').textContent = new Date().getFullYear();
         lucide.createIcons();
-        document.getElementById('copyright-year').textContent = new Date().getFullYear();
-        const langToggle = document.getElementById('lang-toggle');
-        const rootHtml = document.documentElement;
-
+        const rootHtml = document.documentElement; const body = document.body; const langToggle = document.getElementById('lang-toggle');
         function applyLanguage(lang) {
-            rootHtml.setAttribute('lang', lang);
-            rootHtml.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+            rootHtml.setAttribute('lang', lang); rootHtml.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
             langToggle.textContent = lang === 'ar' ? 'English' : 'العربية';
             document.title = document.querySelector('title').getAttribute(`data-${lang}`);
             document.querySelectorAll('#nav-links a').forEach(link => { link.textContent = link.getAttribute(`data-${lang}`); });
-            const navLinks = document.getElementById('nav-links');
-            navLinks.classList.toggle('space-x-reverse', lang === 'ar');
+            document.getElementById('nav-links').classList.toggle('space-x-reverse', lang === 'ar');
             const heroContent = document.getElementById('hero-content');
-            const isMobile = window.innerWidth < 768;
-            heroContent.style.textAlign = isMobile ? 'center' : (lang === 'ar' ? 'right' : 'left');
-            const heroAccentBox = document.getElementById('hero-accent-box');
-            heroAccentBox.style.right = lang === 'ar' ? '-1rem' : 'auto';
-            heroAccentBox.style.left = lang === 'ar' ? 'auto' : '-1rem';
+            if(heroContent) { heroContent.style.textAlign = window.innerWidth < 768 ? 'center' : (lang === 'ar' ? 'right' : 'left'); }
         }
-        langToggle.addEventListener('click', () => {
-            const newLang = rootHtml.getAttribute('lang') === 'ar' ? 'en' : 'ar';
-            applyLanguage(newLang);
+        langToggle.addEventListener('click', () => { const newLang = rootHtml.getAttribute('lang') === 'ar' ? 'en' : 'ar'; applyLanguage(newLang); localStorage.setItem('language', newLang); });
+        window.addEventListener('resize', () => applyLanguage(rootHtml.getAttribute('lang')));
+        const themeToggle = document.getElementById('theme-toggle');
+        const updateThemeIcon = () => { themeToggle.innerHTML = body.classList.contains('dark-theme') ? '<i data-lucide="sun" class="w-5 h-5"></i>' : '<i data-lucide="moon" class="w-5 h-5"></i>'; lucide.createIcons(); };
+        themeToggle.addEventListener('click', () => { body.classList.toggle('dark-theme'); localStorage.setItem('theme', body.classList.contains('dark-theme') ? 'dark' : 'light'); updateThemeIcon(); });
+        const layoutToggle = document.getElementById('layout-toggle');
+        const websiteView = document.getElementById('website-view');
+        const resumeView = document.getElementById('resume-view-wrapper');
+        const navLinks = document.getElementById('nav-links');
+        function applyLayout(layout) {
+            if (layout === 'resume') {
+                websiteView.classList.add('hidden-view'); resumeView.classList.remove('hidden-view'); navLinks.classList.add('hidden-view');
+                layoutToggle.innerHTML = '<i data-lucide="layout-list" class="w-5 h-5"></i>';
+            } else {
+                websiteView.classList.remove('hidden-view'); resumeView.classList.add('hidden-view'); navLinks.classList.remove('hidden-view');
+                layoutToggle.innerHTML = '<i data-lucide="layout-grid" class="w-5 h-5"></i>';
+            }
+            lucide.createIcons();
+        }
+        layoutToggle.addEventListener('click', () => { const newLayout = resumeView.classList.contains('hidden-view') ? 'resume' : 'website'; applyLayout(newLayout); localStorage.setItem('layout', newLayout); });
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedLang = localStorage.getItem('language') || 'ar'; applyLanguage(savedLang);
+            const savedTheme = localStorage.getItem('theme'); if (savedTheme === 'dark') { body.classList.add('dark-theme'); } updateThemeIcon();
+            const savedLayout = localStorage.getItem('layout') || 'website'; applyLayout(savedLayout);
         });
-        window.addEventListener('resize', () => { applyLanguage(rootHtml.getAttribute('lang')); });
-        document.addEventListener('DOMContentLoaded', () => { applyLanguage('ar'); });
     </script>
 </body>
 </html>
-
